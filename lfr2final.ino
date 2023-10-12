@@ -319,7 +319,6 @@ void followline() {
     analogWrite(enA, constrain(max_speed2 - PID, 0, 255));
    
    if (sensorArray[1]>threshold || sensorArray[6]>threshold || sensorValue == 0){
-     rollback(10);
      return;
    }
     delay(5);
@@ -484,7 +483,7 @@ void end()
     delay(100);
   }
   digitalWrite(LED, LOW);
-  finalFlag = 1;
+  finalrun();
   return;
 }
 
@@ -501,9 +500,33 @@ void end2()
   }
 }
 
+void finalrun(){
+  while(1){
+    followline();
+    if (node == path_length)
+      end2();
+
+    switch(path[node++]){
+      case 'R':
+        rollback(10);
+        rightTurn(10);
+        break;
+      case 'L':
+        rollback(10);
+        leftTurn(10);
+        break;
+      case 'S':
+        moveforward(100);
+        break;
+    }
+  }
+}
+
 
 void calibrate() {
-  Serial.println("Start Calibrating ");
+  digitalWrite(LED, HIGH);
+  delay(100);
+  digitalWrite(LED, LOW);
   for (int i = 0; i < 1000; i++) {
     for (int j = 0; j <=6; j++) {
       int val = analogRead(pins[j]);
@@ -551,31 +574,12 @@ void loop() {
   delay(10);
  
     followline();
-
+    rollback(10);
   // Serial.println("followline");
   // }
   //moveforward(30);
-  if (finalFlag)
-  {
-    if (node == path_length)
-      end2();
-
-    switch(path[node++]){
-      case 'R':
-        rightTurn(10);
-        break;
-      case 'L':
-        leftTurn(10);
-        break;
-      case 'S':
-        break;
-    }
-  }
-  else{
     if (algoFlag)
       rightfirst();
     else
       leftfirst();
-
-  }
 }
