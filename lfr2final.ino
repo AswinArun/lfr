@@ -109,7 +109,6 @@ void pathSimplify()
     }
     Serial.println();
   }
-
 }
 
 void stop(int d){
@@ -120,21 +119,30 @@ void stop(int d){
     analogWrite(enB, 0);
     analogWrite(enA, 0);
     delay(d);
-
 }
+
+void rollback(int d){
+   digitalWrite(R1, 0);
+  digitalWrite(R2, 1);
+  digitalWrite(L1, 0);
+  digitalWrite(L2, 1);
+  analogWrite(enA,255);
+  analogWrite(enB,255);
+  left = 0; right = 0;
+  for(int i = 0; i<d; i++){
+    readArray();
+    if (sensorArray[6] > threshold)
+      right = 1;
+    if(sensorArray[1]>threshold)
+      left = 1;
+    delay(2);
+  }
+}
+
 void leftTurn(int d) {
   readArray();
   analogWrite(enA, 150);
   analogWrite(enB, 150);
-
-  // while (sensorArray[2] > threshold) {
-  //   digitalWrite(R1, 1);
-  //   digitalWrite(R2, 0);
-  //   digitalWrite(L1, 1);
-  //   digitalWrite(L2, 0);
-  //   readArray();
-  //   delay(d);
-  // }
   while (sensorArray[1] < threshold) {
     digitalWrite(R1, 1);
     digitalWrite(R2, 0);
@@ -159,15 +167,6 @@ void leftTurn(int d) {
     readArray();
    
   }
-
-  // while(sensorArray[3]<threshold){
-  //   digitalWrite(R1, 1);
-  //   digitalWrite(R2, 0);
-  //   digitalWrite(L1, 0);
-  //   digitalWrite(L2, 1);
-  //   readArray();
-   
-  // }
   digitalWrite(R1, 0);
   digitalWrite(R2, 1);
   digitalWrite(L1, 1);
@@ -176,46 +175,19 @@ void leftTurn(int d) {
 
 }
 
-
-void rollback(int d){
-   digitalWrite(R1, 0);
-  digitalWrite(R2, 1);
-  digitalWrite(L1, 0);
-  digitalWrite(L2, 1);
-  analogWrite(enA,255);
-  analogWrite(enB,255);
-  left = 0; right = 0;
-  for(int i = 0; i<d; i++){
-    readArray();
-    if (sensorArray[6] > threshold)
-      right = 1;
-    if(sensorArray[1]>threshold)
-      left = 1;
-    delay(2);
-  }
-}
 void rightTurn(int d) {
  
   readArray();
   analogWrite(enA, 140);
   analogWrite(enB, 140);
-  // while (sensorArray[6] > threshold) {
-  //   digitalWrite(R1, 1);
-  //   digitalWrite(R2, 0);
-  //   digitalWrite(L1, 1);
-  //   digitalWrite(L2, 0);
-  //   readArray();
-  //   delay(d);
-  // }
+
   while (sensorArray[6] > threshold) {
     digitalWrite(R1, 0);
     digitalWrite(R2, 1);
     digitalWrite(L1, 1);
     digitalWrite(L2, 0);
     readArray();
-   
   }
- 
   while (sensorArray[6] < threshold) {
     digitalWrite(R1, 0);
     digitalWrite(R2, 1);
@@ -230,7 +202,6 @@ void rightTurn(int d) {
     digitalWrite(L1, 1);
     digitalWrite(L2, 0);
     readArray();
-   
   }
 
   // for small return
@@ -286,12 +257,7 @@ void readArray() {
     weightedSum += distFromCenter[i] * sensorArray[i];
    
   }
-  //Serial.print("sensor value: ");
-  //Serial.print(sensorValue);
   error = weightedSum / totalSum;
-
-
- 
 }
 void calculatePID() {
   P = error;
@@ -299,7 +265,6 @@ void calculatePID() {
   D = error - lastError;
   PID = P * Kp + I * Ki + D * Kd;
   lastError = error;
-  // Set wheel movement based on errorValue
 }
 
 void followline() {
@@ -322,56 +287,27 @@ void followline() {
      return;
    }
     delay(5);
-  //   if(sensorValue==0 || sensorValue==0b1111111){
-  // delay(10);
-  // stop(1000);
-  // return;}
-
-  // if(sensorValue==0b0001111 || sensorValue==0b0111100){
-  // delay(10);
- 
-  // return;}
-  // if(sensorValue==0b0000111 || sensorValue==0b0111000)
-  // delay(10);
-  // return;
-  // if(sensorArray[1]<threshold && senosr)
-
-
   }
 
 }
 
 void leftfirst() {
-
-  // Stop on all white or all black
-
-  // Serial.println("right first called");
-  int sensor1 = sensorArray[1], sensor2 = sensorArray[2], sensor3 = sensorArray[3];
-  int sensor5 = sensorArray[5], sensor6 = sensorArray[6], sensor4 = sensorArray[4];
   int prevValue = sensorValue;
   // moveforward(50);
    Serial.println("sensorValue");
   Serial.print(sensorValue, BIN);
   readArray();
-  if(sensorValue==0b1111110 || sensorValue==0b1111111 ||(sensorValue==0b1111100 && prevValue == sensorValue) )
+  if(sensorValue==0b1111110 || sensorValue==0b1111111 ||sensorValue==0b1111100  )
   {
     moveforward(50);
     readArray();
-    if(sensorValue==0b1111110 || sensorValue==0b1111111 ||(sensorValue==0b1111100 && prevValue == sensorValue) )
+    if(sensorValue==0b1111110 || sensorValue==0b1111111 ||sensorValue==0b1111100 )
       end();
     else{
       path[path_length++] = 'L';
       leftTurn(10);
     }
   }
-
-  // else if ((sensor1 > threshold || sensor2 > threshold) && sensor3 > threshold) {
-
-  //   // Serial.println("Left turn");
-  //   leftTurn(10);
-  //   path[path_length++] = 'L';
-  // }
-
   else if (left == 1) {
     // Serial.println("Left turn");
     leftTurn(10);
@@ -400,32 +336,19 @@ void leftfirst() {
 
 void rightfirst() {
 
-  // Stop on all white or all black
-  // Serial.print("sensor value: ");
-  // Serial.println(sensorValue, BIN);
- 
-  int sensor1 = sensorArray[1], sensor2=sensorArray[2];
-  int sensor5 = sensorArray[5], sensor6 = sensorArray[6], sensor4 = sensorArray[4];
   int prevValue = sensorValue;
   // moveforward(50);
   readArray();
-  if(sensorValue==0b1111110 || sensorValue==0b1111111 ||(sensorValue==0b1111100 && prevValue == sensorValue) )
+  if(sensorValue==0b1111110 || sensorValue==0b1111111 ||sensorValue==0b1111100 )
   {
     moveforward(50);
     readArray();
-    if(sensorValue==0b1111110 || sensorValue==0b1111111 ||(sensorValue==0b1111100 && prevValue == sensorValue) )
+    if(sensorValue==0b1111110 || sensorValue==0b1111111 ||sensorValue==0b1111100  )
       end();
     else{
       path[path_length++] = 'S';
     }
   }
- 
-  //  if ((sensor6 > threshold || sensor5 > threshold) && sensor1 > threshold) {
-
-  //   // Serial.println("Right turn");
-  //   rightTurn(10);
-  //   path[path_length++] = 'R';
-  // }
 
   else if (right ==1) {
     // Serial.println("Right turn");
@@ -455,22 +378,6 @@ void rightfirst() {
 
 void end()
 {
-  // Serial.print("\npath: ");
-  // int c;
-  // for (c=0; c<path_length; c++)
-  // {
-  //   Serial.print(path[c]);
-  //   Serial.print(" ");
-  // }
-  // Serial.println();
-
-  // Serial.print("\nafter simplification: ");
-  // for (c=0; c<path_length; c++)
-  // {
-  //   Serial.print(path[c]);
-  //   Serial.print(" ");
-  // }
-  // Serial.println();
   pathSimplify();
   digitalWrite(LED, HIGH);
 
@@ -541,7 +448,6 @@ void calibrate() {
     stop(10);
   }
   digitalWrite(LED, LOW);
- 
 }
 
 
@@ -563,23 +469,19 @@ void setup() {
     algoFlag = 1;
 
   if(digitalRead(finalSwitch))
-   {calibrate();
-   }
-
+    calibrate();
 }
 
 void loop() {
 
   readArray();
   delay(10);
- 
-    followline();
-    rollback(10);
-  // Serial.println("followline");
-  // }
-  //moveforward(30);
-    if (algoFlag)
-      rightfirst();
-    else
-      leftfirst();
+
+  followline();
+  rollback(10);
+
+  if (algoFlag)
+    rightfirst();
+  else
+    leftfirst();
 }
