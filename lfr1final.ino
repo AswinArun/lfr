@@ -32,9 +32,9 @@ int max_speed1 = 160;  //right enb
 int max_speed2 = 180;  //left ena
 
 //pid
-double Kp = 8;  // 15
-double Kd = 25;  // 25
-double Ki = 0.005;
+double Kp = 8;  // 8
+double Kd = 0;  // 25
+double Ki = 0; //.005
 double P = 0;
 double I = 0;
 double D = 0;
@@ -255,8 +255,8 @@ void rightTurn(int d) {
 
 void UTurn(int d) {
   // do {
-  analogWrite(enA, 180);
-  analogWrite(enB, 210);
+  analogWrite(enA, 200);
+  analogWrite(enB, 220);
   while (sensorArray[6] < threshold) {
     digitalWrite(R1, 0);
     digitalWrite(R2, 1);
@@ -379,33 +379,6 @@ void leftfirst() {
   }
 }
 
-void finalrun(){
-  readArray();
-  delay(10);
-  if (sensorValue != 0 && sensorValue != 0b111111) {
-    followline();
-    //Serial.println("followline");
-  }
-  // Serial.print("sensorValue");
-  // Serial.println(sensorValue, BIN);
-
-  if (node == path_length)
-    end2();
-
-  switch(path[node++]){
-    case 'R':
-      stop(100);
-      rightTurn(10);
-      break;
-    case 'L':
-      stop(100);
-      leftTurn(10);
-      break;
-    case 'S':
-      break;
-  }
-}
-
 void end()
 {
   // Serial.print("\npath: ");
@@ -436,7 +409,7 @@ void end()
     delay(100);
   }
   digitalWrite(LED, LOW);
-  finalFlag = 1;
+  finalrun();
   return;
 }
 
@@ -476,8 +449,29 @@ void calibrate() {
   
 }
 
+void finalrun(){
+  while(1){
+    followline();
+    if (node == path_length)
+      end2();
 
-
+    switch(path[node++]){
+      case 'R':
+        stop(10);
+        rollback(20);
+        rightTurn(10);
+        break;
+      case 'L':
+        stop(10);
+        leftTurn(10);
+        rollback(20);
+        break;
+      case 'S':
+        moveforward(100);
+        break;
+    }
+  }
+}
 
 void setup() {
   Serial.begin(9600);
@@ -495,9 +489,8 @@ void setup() {
     algoFlag = 1;
   if(digitalRead(finalSwitch))
    calibrate();
-   
-
 }
+
 void loop() {
 
   readArray();
@@ -508,34 +501,12 @@ void loop() {
   // Serial.println("followline");
   // }
   //moveforward(30);
-  Serial.print("sensorValue");
-  Serial.println(sensorValue, BIN);
-  stop(20);
-  //rollback(20);
+  stop(10);
+  rollback(20)
 
+  if (algoFlag)
+    rightfirst();
+  else
+    leftfirst();
 
- 
-  if (finalFlag)
-  {
-    if (node == path_length)
-      end2();
-
-    switch(path[node++]){
-      case 'R':
-        rightTurn(10);
-        break;
-      case 'L':
-        leftTurn(10);
-        break;
-      case 'S':
-        break;
-    }
-  }
-  else{
-    if (algoFlag)
-      rightfirst();
-    else
-      leftfirst();
-
-  }
 }
